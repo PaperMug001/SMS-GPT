@@ -3,6 +3,7 @@ import os
 import time
 from dotenv import load_dotenv
 from openrouter_h import ask_ai
+from commands import *
 
 load_dotenv()
 
@@ -14,6 +15,9 @@ sms = LibreSMS(BASE, TOKEN)
 PROCESSING = False
 PIN = "jk1"
 
+commands = ["ai", "wh"]
+
+
 def handle_message(message):
     global PROCESSING
 
@@ -21,19 +25,43 @@ def handle_message(message):
 
     try:
         sender = message.get("sender")
-        text = message.get("message", "")
+        text = message.get("message", "").strip()
 
-        command = f"ai {PIN} "
+        # Split command and arguments
+        parts = text.split(" ", 2)
 
-        if text.lower().startswith(command):
-            reply = ask_ai(text[len(command):])
-            sms.send(sender, reply)
+        if len(parts) < 2:
+            return
+
+        command = parts[0].lower()
+        pin = parts[1]
+
+        # Check PIN
+        if pin != PIN:
+            print("Invalid PIN")
+            return
+
+        # Get remaining message after command + pin
+        args = parts[2] if len(parts) > 2 else ""
+
+        # Execute command
+        if command == "ai":
+            response = ask_ai(args)
+            handle_ai(sender, response, sms)
+
+        elif command == "wh":
+            # handle_wh(sender, args, sms)
+            print("Weather is hot here")
+
+        else:
+            print("Unknown command:", command)
 
     except Exception as e:
         print("Message handling error:", e)
 
     finally:
         PROCESSING = False
+
 
 def poll_sms():
     while True:
@@ -60,5 +88,5 @@ def poll_sms():
 
 
 if __name__ == "__main__":
-    print("SMS bot started...")
+    print("SMS Command started...")
     poll_sms()
