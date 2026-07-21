@@ -21,12 +21,16 @@ commands = ["ai", "wh"]
 def handle_message(message):
     global PROCESSING
 
+    sender = message.get("sender")
+    text = message.get("message", "").strip()
+
+    if PROCESSING:
+        sms.send(sender, "Cannot execute. Another command is currently running.")
+        return
+
     PROCESSING = True
 
     try:
-        sender = message.get("sender")
-        text = message.get("message", "").strip()
-
         # Split command and arguments
         parts = text.split(" ", 2)
 
@@ -46,8 +50,7 @@ def handle_message(message):
 
         # Execute command
         if command == "ai":
-            response = ask_ai(args)
-            handle_ai(sender, response, sms)
+            handle_ai(sender, args, sms)
 
         elif command == "wh":
             # handle_wh(sender, args, sms)
@@ -71,13 +74,9 @@ def poll_sms():
             if response.get("Success") and response.get("Data"):
                 messages = response["Data"].get("messages", [])
 
-                if messages and not PROCESSING:
+                if messages:
                     for msg in messages:
                         handle_message(msg)
-
-                else:
-                    print("No new messages")
-
             else:
                 print("SMS retrieval failed:", response)
 
