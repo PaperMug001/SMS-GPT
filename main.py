@@ -13,7 +13,7 @@ TOKEN = os.getenv("TOKEN")
 sms = LibreSMS(BASE, TOKEN)
 
 PROCESSING = False
-PIN = "jk1"
+PIN = os.getenv("PIN")
 
 commands = ["ai", "wh"]
 
